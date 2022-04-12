@@ -1,0 +1,11 @@
+FROM archlinux:base-devel
+
+# Bits needed to run fakemachine
+RUN pacman -Syu --noconfirm qemu-headless \
+                            busybox \
+                            linux \
+                            --assume-installed initramfs
+
+# Bits needed to build fakemachine
+RUN pacman -Syu --noconfirm go \
+                            git
