@@ -1,5 +1,5 @@
-ARG OS_VARIANT=bullseye
-FROM debian:${OS_VARIANT}-slim
+ARG VARIANT=bullseye
+FROM debian:${VARIANT}-slim
 
 ARG DEBIAN_FRONTEND=noninteractive
 
