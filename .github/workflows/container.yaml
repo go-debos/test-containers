@@ -14,6 +14,7 @@ env:
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
+    name: Building ${{ matrix.variant }}
     permissions:
       contents: read
       packages: write
