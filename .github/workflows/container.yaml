@@ -24,6 +24,15 @@ jobs:
           - fakemachine-arch
           - fakemachine-bullseye
           - fakemachine-bookworm
+        include:
+          - variant: fakemachine-arch
+            dockerfile: fakemachine-arch
+          - variant: fakemachine-bullseye
+            dockerfile: fakemachine-debian
+            os_variant: bullseye
+          - variant: fakemachine-bookworm
+            dockerfile: fakemachine-debian
+            os_variant: bookworm
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -51,7 +60,9 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: Dockerfile.${{ matrix.variant }}
+          file: Dockerfile.${{ matrix.dockerfile }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            OS_VARIANT=${{ matrix.os_variant }}
