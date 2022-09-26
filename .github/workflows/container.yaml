@@ -47,7 +47,7 @@ jobs:
             "type=ref,event=pr"
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: .
           file: Dockerfile.${{ matrix.variant }}
