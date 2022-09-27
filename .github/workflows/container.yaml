@@ -50,7 +50,7 @@ jobs:
       # Build Fakemachine containers
       - name: Extract metadata (tags, labels) for Fakemachine Docker image
         id: meta-fakemachine
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/fakemachine-${{ matrix.variant }}
           tags: |
@@ -74,7 +74,7 @@ jobs:
       # Build Debos containers (based on Fakemachine container)
       - name: Extract metadata (tags, labels) for Debos Docker image
         id: meta-debos
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/debos-${{ matrix.variant }}
           tags: |
