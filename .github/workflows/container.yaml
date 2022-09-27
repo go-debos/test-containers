@@ -2,6 +2,8 @@ name: Build and publish Docker images
 on:
  workflow_dispatch:
  push:
+  branches-ignore:
+   - '*.tmp'
  pull_request:
  schedule:
   # New image every monday morning
@@ -97,3 +99,14 @@ jobs:
             BASE_REGISTRY=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
             BASE_IMAGE=fakemachine-${{ matrix.variant }}
             BASE_TAG=${{ steps.meta-fakemachine.outputs.version }}
+
+  # Job to key the bors success status against
+  bors:
+    name: bors
+    if: success()
+    needs:
+      - build-containers
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mark the job as a success
+        run: exit 0
