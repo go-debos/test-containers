@@ -1,11 +1,51 @@
+# Build unpackaged dependencies from source
+FROM archlinux:base-devel AS builder
+
+# Upgrade the system as root
+RUN pacman -Syu --noconfirm
+
+# Build user-mode linux from AUR
+# 
+# Setting the uid to 1 tricks makepkg into thinking we are not root; since we
+# are building in an ephemeral container it's an acceptable tradeoff.
+# see https://www.reddit.com/r/archlinux/comments/evarc8/how_to_run_makepkg_in_docker_container_yes_as/
+#
+# Setting PKGEXT=".pkg.tar" removes the additional compression step from the
+# package build; we are using the package immediately anyway.
+
+ENV EUID=1
+WORKDIR /tmp
+RUN pacman -S --noconfirm git && \
+    git clone --depth=1 https://aur.archlinux.org/linux-usermode.git && \
+    cd linux-usermode && \
+    export MAKEFLAGS="-j$(nproc)" && \
+    export PKGEXT=".pkg.tar" && \
+    makepkg --syncdeps --noconfirm --skippgpcheck
+
+# Build libslirp-helper from source
+RUN pacman -S --noconfirm rust \
+                          libslirp && \
+    git clone --depth=1 https://gitlab.freedesktop.org/slirp/libslirp-rs.git && \
+    cd libslirp-rs && \
+    cargo install --all-features --verbose --path . --root /usr/local
+
+# Build the main runtime image
 FROM archlinux:base-devel
 
 # Bits needed to run fakemachine
 RUN pacman -Syu --noconfirm qemu-headless \
                             busybox \
                             linux \
+                            libslirp \
                             --assume-installed initramfs
 
 # Bits needed to build fakemachine
 RUN pacman -Syu --noconfirm go \
                             git
+
+# Copy user-mode-linux binaries
+COPY --from=builder /tmp/linux-usermode/linux-usermode-*-x86_64.pkg.tar /tmp/
+RUN pacman -U --noconfirm /tmp/linux-usermode-*-x86_64.pkg.tar
+
+# Copy libslirp-helper binaries
+COPY --from=builder /usr/local/bin/libslirp-helper /usr/local/bin/
