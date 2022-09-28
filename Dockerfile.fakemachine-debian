@@ -13,7 +13,9 @@ RUN apt-get update  && \
                                                busybox \
                                                linux-image-amd64 \
                                                systemd \
-                                               dbus
+                                               dbus \
+                                               libslirp-helper \
+                                               user-mode-linux
 
 # Bits needed to build fakemachine
 RUN apt-get update  && \
