@@ -1,6 +1,7 @@
 ARG VARIANT=bullseye
 FROM debian:${VARIANT}-slim
 
+ARG VARIANT
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Always install procps in case the docker file gets used in jenkins
@@ -16,6 +17,11 @@ RUN apt-get update  && \
                                                dbus \
                                                libslirp-helper \
                                                user-mode-linux
+
+# Debian bookworm split systemd-resolved from systemd into separate package
+RUN if [ "$VARIANT" != "bullseye" ] ; then \
+      apt-get install --no-install-recommends -y systemd-resolved; \
+    fi
 
 # Bits needed to build fakemachine
 RUN apt-get update  && \
