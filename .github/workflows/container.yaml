@@ -33,6 +33,8 @@ jobs:
             dockerfile: debian
           - variant: bookworm
             dockerfile: debian
+          - variant: trixie
+            dockerfile: debian
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
