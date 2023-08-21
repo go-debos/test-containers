@@ -1,7 +1,7 @@
 FROM archlinux:base-devel
 
 # Bits needed to run fakemachine
-RUN pacman -Syu --noconfirm qemu-headless \
+RUN pacman -Syu --noconfirm qemu-base \
                             busybox \
                             linux \
                             --assume-installed initramfs
