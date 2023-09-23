@@ -5,7 +5,9 @@ FROM $BASE_REGISTRY/$BASE_IMAGE:$BASE_TAG
 
 # Bits needed to run debos test suite
 RUN pacman -Syu --noconfirm dpkg \
-                            unzip
+                            unzip \
+    && find /var/cache/pacman/pkg -mindepth 1 -delete
 
 # Bits needed to build debos
-RUN pacman -Syu --noconfirm ostree
+RUN pacman -Syu --noconfirm ostree \
+    && find /var/cache/pacman/pkg -mindepth 1 -delete
