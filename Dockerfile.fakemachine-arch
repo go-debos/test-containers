@@ -4,8 +4,11 @@ FROM archlinux:base-devel
 RUN pacman -Syu --noconfirm qemu-base \
                             busybox \
                             linux \
-                            --assume-installed initramfs
+                            --assume-installed initramfs \
+    && find /var/cache/pacman/pkg -mindepth 1 -delete
+
 
 # Bits needed to build fakemachine
 RUN pacman -Syu --noconfirm go \
-                            git
+                            git \
+    && find /var/cache/pacman/pkg -mindepth 1 -delete
