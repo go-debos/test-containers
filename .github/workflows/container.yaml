@@ -17,6 +17,8 @@ jobs:
   build-containers:
     runs-on: ubuntu-latest
     name: Build ${{ matrix.variant }} container
+    env:
+      IMAGE_TAG: ${{ github.repository }}-${{ matrix.variant }}-testbuild
     permissions:
       contents: read
       packages: write
@@ -57,11 +59,70 @@ jobs:
             "type=ref,event=tag"
             "type=ref,event=pr"
 
-      - name: Build and push Docker image
+      - name: Build Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: Dockerfile.${{ matrix.dockerfile }}
+          load: true
+          push: false
+          tags: ${{ env.IMAGE_TAG }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VARIANT=${{ matrix.variant }}
+
+      - name: Checkout fakemachine (for unit tests)
+        uses: actions/checkout@v6
+        with:
+          repository: 'go-debos/fakemachine'
+          ref: main
+          path: src/fakemachine
+
+      - name: Checkout debos (for unit tests)
+        uses: actions/checkout@v6
+        with:
+          repository: 'go-debos/debos'
+          ref: main
+          path: src/debos
+
+      - name: Run fakemachine unit tests in Docker image
+        run: |
+          docker run \
+            --rm \
+            --cgroupns=private \
+            --tmpfs /scratch:exec \
+            --tmpfs /run \
+            --device /dev/kvm \
+            --privileged \
+            -e TMP=/scratch \
+            -e SYSTEMD_NSPAWN_UNIFIED_HIERARCHY=1 \
+            --workdir /mnt/src/fakemachine \
+            --mount "type=bind,source=$(pwd),destination=/mnt" \
+            ${{ env.IMAGE_TAG }} \
+            go test -v ./...
+
+      - name: Run debos unit tests in Docker image
+        run: |
+          docker run \
+            --rm \
+            --cgroupns=private \
+            --tmpfs /scratch:exec \
+            --tmpfs /run \
+            --device /dev/kvm \
+            --privileged \
+            -e TMP=/scratch \
+            -e SYSTEMD_NSPAWN_UNIFIED_HIERARCHY=1 \
+            --workdir /mnt/src/debos \
+            --mount "type=bind,source=$(pwd),destination=/mnt" \
+            ${{ env.IMAGE_TAG }} \
+            go test -v ./...
+
+      - name: Push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.${{ matrix.dockerfile }}
+          load: true
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
