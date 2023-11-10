@@ -16,7 +16,7 @@ env:
 jobs:
   build-containers:
     runs-on: ubuntu-latest
-    name: Build ${{ matrix.variant }} containers
+    name: Build ${{ matrix.variant }} container
     permissions:
       contents: read
       packages: write
@@ -51,12 +51,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build Fakemachine containers
-      - name: Extract metadata (tags, labels) for Fakemachine Docker image
-        id: meta-fakemachine
+      - name: Extract metadata (tags, labels) for Docker image
+        id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/fakemachine-${{ matrix.variant }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.variant }}
           tags: |
             "type=ref,event=branch"
             "type=ref,suffix=-{{sha}},event=branch"
@@ -64,43 +63,16 @@ jobs:
             "type=ref,event=tag"
             "type=ref,event=pr"
 
-      - name: Build and push Fakemachine Docker image
+      - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: Dockerfile.fakemachine-${{ matrix.dockerfile }}
+          file: Dockerfile.${{ matrix.dockerfile }}
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta-fakemachine.outputs.tags }}
-          labels: ${{ steps.meta-fakemachine.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             VARIANT=${{ matrix.variant }}
-
-      # Build Debos containers (based on Fakemachine container)
-      - name: Extract metadata (tags, labels) for Debos Docker image
-        id: meta-debos
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/debos-${{ matrix.variant }}
-          tags: |
-            "type=ref,event=branch"
-            "type=ref,suffix=-{{sha}},event=branch"
-            "type=ref,suffix=-{{date 'YYYYMMDD'}},event=branch"
-            "type=ref,event=tag"
-            "type=ref,event=pr"
-
-      - name: Build and push Debos Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: Dockerfile.debos-${{ matrix.dockerfile }}
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta-debos.outputs.tags }}
-          labels: ${{ steps.meta-debos.outputs.labels }}
-          build-args: |
-            VARIANT=${{ matrix.variant }}
-            BASE_REGISTRY=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-            BASE_IMAGE=fakemachine-${{ matrix.variant }}
-            BASE_TAG=${{ steps.meta-fakemachine.outputs.version }}
 
   # Job to key success status against
   allgreen:
