@@ -17,6 +17,8 @@ jobs:
   build-containers:
     runs-on: ubuntu-latest
     name: Build ${{ matrix.variant }} container
+    env:
+      TEST_TAG: ${{ github.repository }}-${{ matrix.variant }}-testbuild
     permissions:
       contents: read
       packages: write
@@ -63,7 +65,25 @@ jobs:
             "type=ref,event=tag"
             "type=ref,event=pr"
 
-      - name: Build and push Docker image
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.${{ matrix.dockerfile }}
+          load: true
+          push: false
+          tags: ${{ env.TEST_TAG }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VARIANT=${{ matrix.variant }}
+
+      # TODO: actually do something useful here
+      # git clone latest version && go test -v ./...
+      - name: Test Docker image
+        run: |
+          docker run --rm ${{ env.TEST_TAG }} go run github.com/go-debos/debos/cmd/debos@latest --help
+
+      - name: Push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
