@@ -93,10 +93,10 @@ jobs:
 
       - name: Run fakemachine unit tests in Docker image
         run: |
-          docker run --rm
-                     --workdir /mnt
-                     --mount "type=bind,source=$(pwd),destination=/mnt"
-                     ${{ env.TEST_TAG }}
+          docker run --rm \
+                     --workdir /mnt \
+                     --mount "type=bind,source=$(pwd),destination=/mnt" \
+                     ${{ env.TEST_TAG }} \
                      /bin/bash -s <<EOF
             # Sanity check
             ls -la
