@@ -91,7 +91,7 @@ jobs:
                      --workdir /mnt \
                      --mount "type=bind,source=$(pwd),destination=/mnt" \
                      ${{ env.TEST_TAG }} \
-                     ls -la && cd src/fakemachine && go test -v ./...
+                     ls -la && cd src/fakemachine && go test -v ./... --backend=qemu
 
       - name: Checkout debos (for unit tests)
         uses: actions/checkout@v4
@@ -105,7 +105,7 @@ jobs:
                      --workdir /mnt \
                      --mount "type=bind,source=$(pwd),destination=/mnt" \
                      ${{ env.TEST_TAG }} \
-                     cd src/debos && go test -v ./...
+                     cd src/debos && go test -v ./... --fakemachine-backend=qemu
 
       - name: Push Docker image
         uses: docker/build-push-action@v5
