@@ -79,21 +79,25 @@ jobs:
 
       # TODO: actually do something useful here
       # git clone latest version && go test -v ./...
-      - name: Checkout debos (for unit tests)
-        uses: actions/checkout@v4
-        with:
-          repository: 'go-debos/debos'
-          path: src/debos
-
       - name: Checkout fakemachine (for unit tests)
         uses: actions/checkout@v4
         with:
           repository: 'go-debos/fakemachine'
           path: src/fakemachine
 
-      - name: Test Docker image
+      - name: Checkout debos (for unit tests)
+        uses: actions/checkout@v4
+        with:
+          repository: 'go-debos/debos'
+          path: src/debos
+
+      - name: Run fakemachine unit tests in Docker image
         run: |
-          docker run --rm ${{ env.TEST_TAG }} -- /bin/bash -s <<EOF
+          docker run --rm
+                     --workdir /mnt
+                     --mount "type=bind,source=$(pwd),destination=/mnt"
+                     ${{ env.TEST_TAG }}
+                     /bin/bash -s <<EOF
             # Sanity check
             ls -la
 
