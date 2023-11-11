@@ -85,33 +85,27 @@ jobs:
           repository: 'go-debos/fakemachine'
           path: src/fakemachine
 
-      - name: Checkout debos (for unit tests)
-        uses: actions/checkout@v4
-        with:
-          repository: 'go-debos/debos'
-          path: src/debos
-
       - name: Run fakemachine unit tests in Docker image
         run: |
           docker run --rm \
                      --workdir /mnt \
                      --mount "type=bind,source=$(pwd),destination=/mnt" \
                      ${{ env.TEST_TAG }} \
-                     /bin/bash -s <<EOF
-            # Sanity check
-            ls -la
+                     ls -la && cd src/fakemachine && go test -v ./...
 
-            # Fakemachine unit tests
-            cd src/fakemachine
-            go test -v ./...
+      - name: Checkout debos (for unit tests)
+        uses: actions/checkout@v4
+        with:
+          repository: 'go-debos/debos'
+          path: src/debos
 
-            # Debos unit tests
-            cd src/debos
-            go test -v ./...
-
-            # Sanity check exiting with error
-            exit 1
-          EOF
+      - name: Run debos unit tests in Docker image
+        run: |
+          docker run --rm \
+                     --workdir /mnt \
+                     --mount "type=bind,source=$(pwd),destination=/mnt" \
+                     ${{ env.TEST_TAG }} \
+                     cd src/debos && go test -v ./...
 
       - name: Push Docker image
         uses: docker/build-push-action@v5
