@@ -23,6 +23,11 @@ RUN if [ "$VARIANT" != "bullseye" ] ; then \
       apt-get install --no-install-recommends -y systemd-resolved; \
     fi
 
+# Bits needed to run debos
+RUN apt-get update  && \
+    apt-get install --no-install-recommends -y \
+      unzip
+
 # Bits needed to build fakemachine
 RUN apt-get update  && \
     apt-get install --no-install-recommends -y \
@@ -31,3 +36,8 @@ RUN apt-get update  && \
       ca-certificates \
       gcc \
       libc6-dev
+
+# Bits needed to build debos
+RUN apt-get update  && \
+    apt-get install --no-install-recommends -y \
+      libostree-dev
