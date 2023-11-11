@@ -79,9 +79,35 @@ jobs:
 
       # TODO: actually do something useful here
       # git clone latest version && go test -v ./...
+      - name: Checkout debos (for unit tests)
+        uses: actions/checkout@v4
+        with:
+          repository: 'go-debos/debos'
+          path: src/debos
+
+      - name: Checkout fakemachine (for unit tests)
+        uses: actions/checkout@v4
+        with:
+          repository: 'go-debos/fakemachine'
+          path: src/fakemachine
+
       - name: Test Docker image
         run: |
-          docker run --rm ${{ env.TEST_TAG }} go run github.com/go-debos/debos/cmd/debos@latest --help
+          docker run --rm ${{ env.TEST_TAG }} -- /bin/bash -s <<EOF
+            # Sanity check
+            ls -la
+
+            # Fakemachine unit tests
+            cd src/fakemachine
+            go test -v ./...
+
+            # Debos unit tests
+            cd src/debos
+            go test -v ./...
+
+            # Sanity check exiting with error
+            exit 1
+          EOF
 
       - name: Push Docker image
         uses: docker/build-push-action@v5
