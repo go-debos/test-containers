@@ -35,6 +35,8 @@ jobs:
             dockerfile: debian
           - variant: trixie
             dockerfile: debian
+          - variant: forky
+            dockerfile: debian
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
