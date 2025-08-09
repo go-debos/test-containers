@@ -129,6 +129,30 @@ jobs:
           build-args: |
             VARIANT=${{ matrix.variant }}
 
+  # Cleanup GitHub container registry
+  cleanup-containers:
+    runs-on: ubuntu-latest
+    name: Cleanup container registry
+    if: github.event_name == 'schedule'
+    permissions:
+      packages: write
+    steps:
+      - uses: snok/container-retention-policy@v3.0.1
+        with:
+          account: ${{ github.repository_owner }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          image-names: >-
+            test-containers/arch
+            test-containers/bookworm
+            test-containers/bullseye
+            test-containers/fedora
+            test-containers/forky
+            test-containers/plucky
+            test-containers/trixie
+          image-tags: "!latest"
+          cut-off: 6m
+          keep-n-most-recent: 10
+
   # Keep workflow alive
   # See https://docs.github.com/en/actions/learn-github-actions/usage-limits-billing-and-administration#disabling-and-enabling-workflows
   workflow-keepalive:
