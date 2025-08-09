@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2017-2026 Collabora Ltd.
+# SPDX-License-Identifier: Apache-2.0
+
 name: Build and publish Docker images
 on:
  workflow_dispatch:
