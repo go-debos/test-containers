@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2017-2026 Collabora Ltd.
+# SPDX-License-Identifier: Apache-2.0
+
 version: 2
 updates:
   - package-ecosystem: "github-actions"
