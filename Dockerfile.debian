@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2017-2025 Collabora Ltd.
+# SPDX-License-Identifier: Apache-2.0
+
 ARG VARIANT=bullseye
 FROM debian:${VARIANT}-slim
 
