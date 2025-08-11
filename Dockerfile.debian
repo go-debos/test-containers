@@ -16,7 +16,8 @@ RUN apt-get update  && \
                                                systemd \
                                                dbus \
                                                libslirp-helper \
-                                               user-mode-linux
+                                               user-mode-linux \
+                                               e2fsprogs
 
 # Debian bookworm split systemd-resolved from systemd into separate package
 RUN if [ "$VARIANT" != "bullseye" ] ; then \
