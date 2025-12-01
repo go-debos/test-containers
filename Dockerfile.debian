@@ -1,4 +1,4 @@
-ARG VARIANT=bullseye
+ARG VARIANT=trixie
 FROM debian:${VARIANT}-slim
 
 ARG VARIANT
@@ -18,11 +18,6 @@ RUN apt-get update  && \
                                                libslirp-helper \
                                                user-mode-linux \
                                                e2fsprogs
-
-# Debian bookworm split systemd-resolved from systemd into separate package
-RUN if [ "$VARIANT" != "bullseye" ] ; then \
-      apt-get install --no-install-recommends -y systemd-resolved; \
-    fi
 
 # Bits needed to run debos
 RUN apt-get update  && \
