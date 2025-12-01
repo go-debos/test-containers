@@ -22,17 +22,9 @@ jobs:
       packages: write
     strategy:
       matrix:
-        variant:
-          - arch
-          - bullseye
-          - bookworm
         include:
           - variant: arch
             dockerfile: arch
-          - variant: bullseye
-            dockerfile: debian
-          - variant: bookworm
-            dockerfile: debian
           - variant: trixie
             dockerfile: debian
           - variant: forky
