@@ -1,0 +1,44 @@
+FROM fedora:latest
+
+RUN dnf -y update && \
+    dnf -y install --setopt=install_weak_deps=False \
+      procps-ng && \
+    dnf -y clean all
+
+# Bits needed to run fakemachine
+RUN dnf -y update && \
+    dnf -y install --setopt=install_weak_deps=False \
+      qemu-system-x86 \
+      qemu-user-static \
+      busybox \
+      kernel \
+      systemd \
+      systemd-networkd \
+      systemd-resolved \
+      dbus-daemon \
+      e2fsprogs && \
+    dnf -y clean all
+
+# Bits needed to run debos
+RUN dnf -y update && \
+    dnf -y install --setopt=install_weak_deps=False \
+      debootstrap \
+      dpkg \
+      unzip && \
+    dnf -y clean all
+
+# Bits needed to build fakemachine
+RUN dnf -y update && \
+    dnf -y install --setopt=install_weak_deps=False \
+      golang \
+      git \
+      ca-certificates \
+      gcc \
+      glibc-devel && \
+    dnf -y clean all
+
+# Bits needed to build debos
+RUN dnf -y update && \
+    dnf -y install --setopt=install_weak_deps=False \
+      ostree-devel && \
+    dnf -y clean all
