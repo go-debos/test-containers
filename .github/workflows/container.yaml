@@ -29,9 +29,9 @@ jobs:
 
   build-containers:
     runs-on: ubuntu-latest
-    name: Build ${{ matrix.variant }} container
+    name: Build ${{ matrix.distro }}/${{ matrix.variant }} container
     env:
-      IMAGE_TAG: ${{ github.repository }}-${{ matrix.variant }}-testbuild
+      IMAGE_TAG: ${{ github.repository }}-${{ matrix.distro }}-${{ matrix.variant }}-testbuild
     permissions:
       contents: read
       packages: write
@@ -40,11 +40,22 @@ jobs:
         include:
           - variant: arch
             dockerfile: arch
+            distro: arch
+            image: base-devel
           - variant: trixie
             dockerfile: debian
+            distro: debian
+            image: trixie-slim
           - variant: forky
             dockerfile: debian
+            distro: debian
+            image: forky-slim
+          - variant: plucky
+            dockerfile: debian
+            distro: ubuntu
+            image: plucky
           - variant: fedora
+            distro: fedora
             dockerfile: fedora
     steps:
       - name: Checkout repository
@@ -84,7 +95,8 @@ jobs:
           tags: ${{ env.IMAGE_TAG }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            VARIANT=${{ matrix.variant }}
+            DISTRO=${{ matrix.distro }}
+            IMAGE=${{ matrix.image }}
 
       - name: Checkout fakemachine (for unit tests)
         uses: actions/checkout@v6
@@ -142,7 +154,8 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            VARIANT=${{ matrix.variant }}
+            DISTRO=${{ matrix.distro }}
+            IMAGE=${{ matrix.image }}
 
   # Cleanup GitHub container registry
   cleanup-containers:
@@ -157,13 +170,13 @@ jobs:
           account: ${{ github.repository_owner }}
           token: ${{ secrets.GITHUB_TOKEN }}
           image-names: >-
-            test-containers/arch
-            test-containers/bookworm
-            test-containers/bullseye
-            test-containers/fedora
-            test-containers/forky
-            test-containers/plucky
-            test-containers/trixie
+            test-containers/arch/arch
+            test-containers/debian/bookworm
+            test-containers/debian/bullseye
+            test-containers/debian/trixie
+            test-containers/debian/forky
+            test-containers/fedora/fedora
+            test-containers/ubuntu/plucky
           image-tags: "!latest"
           cut-off: 6m
           keep-n-most-recent: 10
