@@ -19,7 +19,8 @@ RUN apt-get update  && \
                                                systemd \
                                                systemd-resolved \
                                                dbus \
-                                               e2fsprogs
+                                               e2fsprogs \
+                                               udev
 
 # Bits needed to run debos
 RUN apt-get update  && \
