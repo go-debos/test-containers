@@ -31,6 +31,8 @@ jobs:
             dockerfile: debian
           - variant: forky
             dockerfile: debian
+          - variant: fedora
+            dockerfile: fedora
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
