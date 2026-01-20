@@ -16,9 +16,9 @@ env:
 jobs:
   build-containers:
     runs-on: ubuntu-latest
-    name: Build ${{ matrix.variant }} container
+    name: Build ${{ matrix.distro }}/${{ matrix.variant }} container
     env:
-      IMAGE_TAG: ${{ github.repository }}-${{ matrix.variant }}-testbuild
+      IMAGE_TAG: ${{ github.repository }}-${{ matrix.distro }}-${{ matrix.variant }}-testbuild
     permissions:
       contents: read
       packages: write
@@ -27,10 +27,20 @@ jobs:
         include:
           - variant: arch
             dockerfile: arch
+            distro: arch
+            image: base-devel
           - variant: trixie
             dockerfile: debian
+            distro: debian
+            image: trixie-slim
           - variant: forky
             dockerfile: debian
+            distro: debian
+            image: forky-slim
+          - variant: plucky
+            dockerfile: debian
+            distro: ubuntu
+            image: plucky
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -69,7 +79,8 @@ jobs:
           tags: ${{ env.IMAGE_TAG }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            VARIANT=${{ matrix.variant }}
+            DISTRO=${{ matrix.distro }}
+            IMAGE=${{ matrix.image }}
 
       - name: Checkout fakemachine (for unit tests)
         uses: actions/checkout@v6
@@ -127,7 +138,8 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            VARIANT=${{ matrix.variant }}
+            DISTRO=${{ matrix.distro }}
+            IMAGE=${{ matrix.image }}
 
   # Cleanup GitHub container registry
   cleanup-containers:
