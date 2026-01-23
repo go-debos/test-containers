@@ -10,7 +10,7 @@ RUN apt update && apt-get install  --no-install-recommends -y procps
 # Bits needed to run fakemachine
 RUN apt-get update  && \
     apt-get install --no-install-recommends -y qemu-system-x86 \
-                                               qemu-user-static \
+                                               qemu-user-binfmt \
                                                busybox \
                                                linux-image-amd64 \
                                                systemd \
