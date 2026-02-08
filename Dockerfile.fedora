@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2017-2026 Collabora Ltd.
+# SPDX-License-Identifier: Apache-2.0
+
 FROM fedora:latest
 
 RUN dnf -y update && \
