@@ -29,32 +29,35 @@ jobs:
 
   build-containers:
     runs-on: ubuntu-latest
-    name: Build ${{ matrix.distro }}/${{ matrix.variant }} container
-    env:
-      IMAGE_TAG: ${{ github.repository }}-${{ matrix.distro }}-${{ matrix.variant }}-testbuild
+    name: Build ${{ matrix.image-name }} container
     permissions:
       contents: read
       packages: write
     strategy:
       matrix:
         include:
-          - variant: arch
+          - image-name: arch
+            variant: arch
             dockerfile: arch
             distro: arch
             image: base-devel
-          - variant: trixie
+          - image-name: debian-trixie
+            variant: trixie
             dockerfile: debian
             distro: debian
             image: trixie-slim
-          - variant: forky
+          - image-name: debian-forky
+            variant: forky
             dockerfile: debian
             distro: debian
             image: forky-slim
-          - variant: plucky
+          - image-name: ubuntu-plucky
+            variant: plucky
             dockerfile: debian
             distro: ubuntu
             image: plucky
-          - variant: fedora
+          - image-name: fedora
+            variant: fedora
             distro: fedora
             dockerfile: fedora
     steps:
@@ -77,14 +80,13 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.variant }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.image-name }}
           tags: |
             "type=ref,event=branch"
             "type=ref,suffix=-{{sha}},event=branch"
             "type=ref,suffix=-{{date 'YYYYMMDD'}},event=branch"
             "type=ref,event=tag"
             "type=ref,event=pr"
-
       - name: Build Docker image
         uses: docker/build-push-action@v6
         with:
@@ -92,11 +94,20 @@ jobs:
           file: Dockerfile.${{ matrix.dockerfile }}
           load: true
           push: false
-          tags: ${{ env.IMAGE_TAG }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             DISTRO=${{ matrix.distro }}
             IMAGE=${{ matrix.image }}
+
+      - name: Save container image tag
+        id: tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          # pick the first tag
+          CONTAINER_IMAGE_TAG="$(printf '%s\n' "${{ steps.meta.outputs.tags }}" | head -n1)"
+          echo "container_image_tag=$CONTAINER_IMAGE_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Checkout fakemachine (for unit tests)
         uses: actions/checkout@v6
@@ -125,7 +136,7 @@ jobs:
             -e SYSTEMD_NSPAWN_UNIFIED_HIERARCHY=1 \
             --workdir /mnt/src/fakemachine \
             --mount "type=bind,source=$(pwd),destination=/mnt" \
-            ${{ env.IMAGE_TAG }} \
+            ${{ steps.tag.outputs.container_image_tag }} \
             go test -v ./...
 
       - name: Run debos unit tests in Docker image
@@ -141,7 +152,7 @@ jobs:
             -e SYSTEMD_NSPAWN_UNIFIED_HIERARCHY=1 \
             --workdir /mnt/src/debos \
             --mount "type=bind,source=$(pwd),destination=/mnt" \
-            ${{ env.IMAGE_TAG }} \
+            ${{ steps.tag.outputs.container_image_tag }} \
             go test -v ./...
 
       - name: Push Docker image
