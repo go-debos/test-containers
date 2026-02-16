@@ -157,30 +157,6 @@ jobs:
             DISTRO=${{ matrix.distro }}
             IMAGE=${{ matrix.image }}
 
-  # Cleanup GitHub container registry
-  cleanup-containers:
-    runs-on: ubuntu-latest
-    name: Cleanup container registry
-    if: github.event_name == 'schedule'
-    permissions:
-      packages: write
-    steps:
-      - uses: snok/container-retention-policy@v3.0.1
-        with:
-          account: ${{ github.repository_owner }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          image-names: >-
-            test-containers/arch/arch
-            test-containers/debian/bookworm
-            test-containers/debian/bullseye
-            test-containers/debian/trixie
-            test-containers/debian/forky
-            test-containers/fedora/fedora
-            test-containers/ubuntu/plucky
-          image-tags: "!latest"
-          cut-off: 6m
-          keep-n-most-recent: 10
-
   # Keep workflow alive
   # See https://docs.github.com/en/actions/learn-github-actions/usage-limits-billing-and-administration#disabling-and-enabling-workflows
   workflow-keepalive:
