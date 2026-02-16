@@ -56,7 +56,7 @@ jobs:
             dockerfile: debian
             distro: ubuntu
             image: plucky
-          - image-name: fedora
+          - image-name: fedora-latest
             variant: fedora
             distro: fedora
             dockerfile: fedora
