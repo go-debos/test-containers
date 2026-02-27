@@ -51,8 +51,8 @@ jobs:
             dockerfile: debian
             distro: debian
             image: forky-slim
-          - image-name: ubuntu-plucky
-            variant: plucky
+          - image-name: ubuntu-questing
+            variant: questing
             dockerfile: debian
             distro: ubuntu
             image: plucky
