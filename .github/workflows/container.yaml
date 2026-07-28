@@ -55,7 +55,7 @@ jobs:
             variant: questing
             dockerfile: debian
             distro: ubuntu
-            image: plucky
+            image: questing
           - image-name: fedora-latest
             variant: fedora
             distro: fedora
