@@ -38,22 +38,17 @@ jobs:
         include:
           - image-name: arch
             dockerfile: arch
-            distro: arch
             base-image: archlinux:base-devel
           - image-name: debian-trixie
             dockerfile: debian
-            distro: debian
             base-image: debian:trixie
           - image-name: debian-forky
             dockerfile: debian
-            distro: debian
             base-image: debian:forky
           - image-name: ubuntu-stonking
             dockerfile: debian
-            distro: ubuntu
             base-image: ubuntu:stonking
           - image-name: fedora-44
-            distro: fedora
             dockerfile: fedora
             base-image: fedora:44
     steps:
@@ -93,7 +88,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            DISTRO=${{ matrix.distro }}
             BASE_IMAGE=${{ matrix.base-image }}
 
       - name: Save container image tag
@@ -161,7 +155,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            DISTRO=${{ matrix.distro }}
             BASE_IMAGE=${{ matrix.base-image }}
 
   # Keep workflow alive
