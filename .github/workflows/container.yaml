@@ -40,26 +40,27 @@ jobs:
             variant: arch
             dockerfile: arch
             distro: arch
-            image: base-devel
+            base-image: archlinux:base-devel
           - image-name: debian-trixie
             variant: trixie
             dockerfile: debian
             distro: debian
-            image: trixie-slim
+            base-image: debian:trixie-slim
           - image-name: debian-forky
             variant: forky
             dockerfile: debian
             distro: debian
-            image: forky-slim
+            base-image: debian:forky-slim
           - image-name: ubuntu-questing
             variant: questing
             dockerfile: debian
             distro: ubuntu
-            image: questing
+            base-image: ubuntu:questing
           - image-name: fedora-latest
             variant: fedora
             distro: fedora
             dockerfile: fedora
+            base-image: fedora:latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -98,7 +99,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             DISTRO=${{ matrix.distro }}
-            IMAGE=${{ matrix.image }}
+            BASE_IMAGE=${{ matrix.base-image }}
 
       - name: Save container image tag
         id: tag
@@ -166,7 +167,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             DISTRO=${{ matrix.distro }}
-            IMAGE=${{ matrix.image }}
+            BASE_IMAGE=${{ matrix.base-image }}
 
   # Keep workflow alive
   # See https://docs.github.com/en/actions/learn-github-actions/usage-limits-billing-and-administration#disabling-and-enabling-workflows
