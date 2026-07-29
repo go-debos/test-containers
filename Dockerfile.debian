@@ -4,7 +4,6 @@
 ARG BASE_IMAGE=debian:trixie
 FROM ${BASE_IMAGE}
 
-ARG DISTRO=debian
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Always install procps in case the docker file gets used in jenkins
@@ -12,14 +11,12 @@ RUN apt update && apt-get install  --no-install-recommends -y procps
 
 # Install kernel
 # (Debian uses linux-image-amd64; ubuntu uses linux-image-generic)
-RUN if [ "${DISTRO}" = "debian" ]; then \
-      KERNEL_PACKAGE=linux-image-amd64; \
-    elif [ "${DISTRO}" = "ubuntu" ]; then \
-      KERNEL_PACKAGE=linux-image-generic; \
-    else \
-      echo "Unsupported DISTRO=${DISTRO}" >&2; \
-      exit 1; \
-    fi; \
+RUN . /etc/os-release && \
+    case "${ID}" in \
+      debian) KERNEL_PACKAGE=linux-image-amd64 ;; \
+      ubuntu) KERNEL_PACKAGE=linux-image-generic ;; \
+      *) echo "Unsupported distro: ${ID}" >&2; exit 1 ;; \
+    esac && \
     apt-get update && \
     apt-get install --no-install-recommends -y "$KERNEL_PACKAGE"
 
