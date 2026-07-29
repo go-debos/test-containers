@@ -1,12 +1,10 @@
 # SPDX-FileCopyrightText: 2017-2026 Collabora Ltd.
 # SPDX-License-Identifier: Apache-2.0
 
-ARG DISTRO=debian
-ARG IMAGE=trixie-slim
-FROM ${DISTRO}:${IMAGE}
+ARG BASE_IMAGE=debian:trixie-slim
+FROM ${BASE_IMAGE}
 
-ARG DISTRO
-ARG IMAGE
+ARG DISTRO=debian
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Always install procps in case the docker file gets used in jenkins
