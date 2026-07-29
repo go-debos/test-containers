@@ -37,27 +37,22 @@ jobs:
       matrix:
         include:
           - image-name: arch
-            variant: arch
             dockerfile: arch
             distro: arch
             base-image: archlinux:base-devel
           - image-name: debian-trixie
-            variant: trixie
             dockerfile: debian
             distro: debian
             base-image: debian:trixie-slim
           - image-name: debian-forky
-            variant: forky
             dockerfile: debian
             distro: debian
             base-image: debian:forky-slim
           - image-name: ubuntu-questing
-            variant: questing
             dockerfile: debian
             distro: ubuntu
             base-image: ubuntu:questing
           - image-name: fedora-latest
-            variant: fedora
             distro: fedora
             dockerfile: fedora
             base-image: fedora:latest
