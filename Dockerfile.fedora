@@ -4,11 +4,6 @@
 ARG BASE_IMAGE=fedora:44
 FROM ${BASE_IMAGE}
 
-RUN dnf -y update && \
-    dnf -y install --setopt=install_weak_deps=False \
-      procps-ng && \
-    dnf -y clean all
-
 # Bits needed to run fakemachine
 RUN dnf -y update && \
     dnf -y install --setopt=install_weak_deps=False \

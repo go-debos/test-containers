@@ -6,11 +6,6 @@ FROM ${BASE_IMAGE}
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Always install procps in case the docker file gets used in jenkins
-RUN apt-get update && \
-    apt-get install --no-install-recommends -y \
-      procps
-
 # Install kernel
 # (Debian uses linux-image-amd64; ubuntu uses linux-image-generic)
 RUN . /etc/os-release && \
