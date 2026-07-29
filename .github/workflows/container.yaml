@@ -173,11 +173,14 @@ jobs:
     if: always()
     needs:
       - build-containers
+      - reuse-compliance-check
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed
         uses: re-actors/alls-green@release/v1
         with:
+          # the REUSE check does not run on scheduled builds
+          allowed-skips: reuse-compliance-check
           jobs: ${{ toJSON(needs) }}
 
   # Notify on job failure
