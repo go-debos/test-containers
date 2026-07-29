@@ -7,7 +7,9 @@ FROM ${BASE_IMAGE}
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Always install procps in case the docker file gets used in jenkins
-RUN apt update && apt-get install  --no-install-recommends -y procps
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+      procps
 
 # Install kernel
 # (Debian uses linux-image-amd64; ubuntu uses linux-image-generic)
@@ -21,23 +23,24 @@ RUN . /etc/os-release && \
     apt-get install --no-install-recommends -y "$KERNEL_PACKAGE"
 
 # Bits needed to run fakemachine
-RUN apt-get update  && \
-    apt-get install --no-install-recommends -y qemu-system-x86 \
-                                               qemu-user-binfmt \
-                                               busybox \
-                                               systemd \
-                                               systemd-resolved \
-                                               dbus \
-                                               e2fsprogs \
-                                               udev
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+      qemu-system-x86 \
+      qemu-user-binfmt \
+      busybox \
+      systemd \
+      systemd-resolved \
+      dbus \
+      e2fsprogs \
+      udev
 
 # Bits needed to run debos
-RUN apt-get update  && \
+RUN apt-get update && \
     apt-get install --no-install-recommends -y \
       unzip
 
 # Bits needed to build fakemachine
-RUN apt-get update  && \
+RUN apt-get update && \
     apt-get install --no-install-recommends -y \
       golang-go \
       git \
@@ -46,6 +49,6 @@ RUN apt-get update  && \
       libc6-dev
 
 # Bits needed to build debos
-RUN apt-get update  && \
+RUN apt-get update && \
     apt-get install --no-install-recommends -y \
       libostree-dev
