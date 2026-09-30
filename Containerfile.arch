@@ -1,7 +1,8 @@
 # SPDX-FileCopyrightText: 2017-2026 Collabora Ltd.
 # SPDX-License-Identifier: Apache-2.0
 
-FROM archlinux:base-devel
+ARG BASE_IMAGE=archlinux:base-devel
+FROM ${BASE_IMAGE}
 
 # Bits needed to run fakemachine
 RUN pacman -Syu --noconfirm qemu-base \

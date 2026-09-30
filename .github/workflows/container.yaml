@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2017-2026 Collabora Ltd.
 # SPDX-License-Identifier: Apache-2.0
 
-name: Build and publish Docker images
+name: Build and publish container images
 on:
  workflow_dispatch:
  push:
@@ -37,29 +37,20 @@ jobs:
       matrix:
         include:
           - image-name: arch
-            variant: arch
-            dockerfile: arch
-            distro: arch
-            image: base-devel
+            containerfile: arch
+            base-image: archlinux:base-devel
           - image-name: debian-trixie
-            variant: trixie
-            dockerfile: debian
-            distro: debian
-            image: trixie-slim
+            containerfile: debian
+            base-image: debian:trixie
           - image-name: debian-forky
-            variant: forky
-            dockerfile: debian
-            distro: debian
-            image: forky-slim
-          - image-name: ubuntu-questing
-            variant: questing
-            dockerfile: debian
-            distro: ubuntu
-            image: questing
-          - image-name: fedora-latest
-            variant: fedora
-            distro: fedora
-            dockerfile: fedora
+            containerfile: debian
+            base-image: debian:forky
+          - image-name: ubuntu-stonking
+            containerfile: debian
+            base-image: ubuntu:stonking
+          - image-name: fedora-44
+            containerfile: fedora
+            base-image: fedora:44
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -76,7 +67,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker image
+      - name: Extract metadata (tags, labels) for container image
         id: meta
         uses: docker/metadata-action@v6
         with:
@@ -87,18 +78,17 @@ jobs:
             "type=ref,suffix=-{{date 'YYYYMMDD'}},event=branch"
             "type=ref,event=tag"
             "type=ref,event=pr"
-      - name: Build Docker image
+      - name: Build container image
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: Dockerfile.${{ matrix.dockerfile }}
+          file: Containerfile.${{ matrix.containerfile }}
           load: true
           push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            DISTRO=${{ matrix.distro }}
-            IMAGE=${{ matrix.image }}
+            BASE_IMAGE=${{ matrix.base-image }}
 
       - name: Save container image tag
         id: tag
@@ -123,7 +113,7 @@ jobs:
           ref: main
           path: src/debos
 
-      - name: Run fakemachine unit tests in Docker image
+      - name: Run fakemachine unit tests in container image
         run: |
           docker run \
             --rm \
@@ -139,7 +129,7 @@ jobs:
             ${{ steps.tag.outputs.container_image_tag }} \
             go test -v ./...
 
-      - name: Run debos unit tests in Docker image
+      - name: Run debos unit tests in container image
         run: |
           docker run \
             --rm \
@@ -155,18 +145,16 @@ jobs:
             ${{ steps.tag.outputs.container_image_tag }} \
             go test -v ./...
 
-      - name: Push Docker image
+      - name: Push container image
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: Dockerfile.${{ matrix.dockerfile }}
-          load: true
+          file: Containerfile.${{ matrix.containerfile }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            DISTRO=${{ matrix.distro }}
-            IMAGE=${{ matrix.image }}
+            BASE_IMAGE=${{ matrix.base-image }}
 
   # Keep workflow alive
   # See https://docs.github.com/en/actions/learn-github-actions/usage-limits-billing-and-administration#disabling-and-enabling-workflows
@@ -184,11 +172,14 @@ jobs:
     if: always()
     needs:
       - build-containers
+      - reuse-compliance-check
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed
         uses: re-actors/alls-green@release/v1
         with:
+          # the REUSE check does not run on scheduled builds
+          allowed-skips: reuse-compliance-check
           jobs: ${{ toJSON(needs) }}
 
   # Notify on job failure

@@ -1,0 +1,49 @@
+# SPDX-FileCopyrightText: 2017-2026 Collabora Ltd.
+# SPDX-License-Identifier: Apache-2.0
+
+ARG BASE_IMAGE=debian:trixie
+FROM ${BASE_IMAGE}
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Install kernel
+# (Debian uses linux-image-amd64; ubuntu uses linux-image-generic)
+RUN . /etc/os-release && \
+    case "${ID}" in \
+      debian) KERNEL_PACKAGE=linux-image-amd64 ;; \
+      ubuntu) KERNEL_PACKAGE=linux-image-generic ;; \
+      *) echo "Unsupported distro: ${ID}" >&2; exit 1 ;; \
+    esac && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y "$KERNEL_PACKAGE"
+
+# Bits needed to run fakemachine
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+      qemu-system-x86 \
+      qemu-user-binfmt \
+      busybox \
+      systemd \
+      systemd-resolved \
+      dbus \
+      e2fsprogs \
+      udev
+
+# Bits needed to run debos
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+      unzip
+
+# Bits needed to build fakemachine
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+      golang-go \
+      git \
+      ca-certificates \
+      gcc \
+      libc6-dev
+
+# Bits needed to build debos
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+      libostree-dev
