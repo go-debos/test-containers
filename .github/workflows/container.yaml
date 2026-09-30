@@ -48,10 +48,10 @@ jobs:
             dockerfile: debian
             distro: debian
             base-image: debian:forky-slim
-          - image-name: ubuntu-questing
+          - image-name: ubuntu-stonking
             dockerfile: debian
             distro: ubuntu
-            base-image: ubuntu:questing
+            base-image: ubuntu:stonking
           - image-name: fedora-latest
             distro: fedora
             dockerfile: fedora
