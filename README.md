@@ -8,13 +8,13 @@ their CI. They are rebuilt weekly and published to
 
 ## Images
 
-| Image             | Dockerfile          | Base image             |
-| ----------------- | ------------------- | ---------------------- |
-| `arch`            | `Dockerfile.arch`   | `archlinux:base-devel` |
-| `debian-trixie`   | `Dockerfile.debian` | `debian:trixie`        |
-| `debian-forky`    | `Dockerfile.debian` | `debian:forky`         |
-| `ubuntu-stonking` | `Dockerfile.debian` | `ubuntu:stonking`      |
-| `fedora-44`       | `Dockerfile.fedora` | `fedora:44`            |
+| Image             | Containerfile          | Base image             |
+| ----------------- | ---------------------- | ---------------------- |
+| `arch`            | `Containerfile.arch`   | `archlinux:base-devel` |
+| `debian-trixie`   | `Containerfile.debian` | `debian:trixie`        |
+| `debian-forky`    | `Containerfile.debian` | `debian:forky`         |
+| `ubuntu-stonking` | `Containerfile.debian` | `ubuntu:stonking`      |
+| `fedora-44`       | `Containerfile.fedora` | `fedora:44`            |
 
 Each image is named after the release it is built on: the codename for
 Debian and Ubuntu, and the release number for Fedora, which has no
@@ -24,16 +24,16 @@ and so has no codename.
 
 ## Building
 
-Every Dockerfile takes a `BASE_IMAGE` build-arg holding the complete
+Every Containerfile takes a `BASE_IMAGE` build-arg holding the complete
 reference of the image to build on top of:
 
 ```sh
-$ docker build -f Dockerfile.debian -t debos-test-container-debian-forky \
+$ podman build -f Containerfile.debian -t debos-test-container-debian-forky \
     --build-arg BASE_IMAGE=debian:forky .
 ```
 
 Omit `--build-arg` to build the default base image listed above.
-`Dockerfile.debian` covers both Debian and Ubuntu and picks the kernel
+`Containerfile.debian` covers both Debian and Ubuntu and picks the kernel
 package to install from the base image's `/etc/os-release`.
 
 ## Testing
@@ -44,7 +44,7 @@ virtualisation, so the host must have `/dev/kvm`:
 
 ```sh
 $ git clone https://github.com/go-debos/fakemachine.git
-$ docker run \
+$ podman run \
       --rm \
       --cgroupns=private \
       --tmpfs /scratch:exec \

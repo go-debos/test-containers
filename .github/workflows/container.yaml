@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2017-2026 Collabora Ltd.
 # SPDX-License-Identifier: Apache-2.0
 
-name: Build and publish Docker images
+name: Build and publish container images
 on:
  workflow_dispatch:
  push:
@@ -37,19 +37,19 @@ jobs:
       matrix:
         include:
           - image-name: arch
-            dockerfile: arch
+            containerfile: arch
             base-image: archlinux:base-devel
           - image-name: debian-trixie
-            dockerfile: debian
+            containerfile: debian
             base-image: debian:trixie
           - image-name: debian-forky
-            dockerfile: debian
+            containerfile: debian
             base-image: debian:forky
           - image-name: ubuntu-stonking
-            dockerfile: debian
+            containerfile: debian
             base-image: ubuntu:stonking
           - image-name: fedora-44
-            dockerfile: fedora
+            containerfile: fedora
             base-image: fedora:44
     steps:
       - name: Checkout repository
@@ -67,7 +67,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker image
+      - name: Extract metadata (tags, labels) for container image
         id: meta
         uses: docker/metadata-action@v6
         with:
@@ -78,11 +78,11 @@ jobs:
             "type=ref,suffix=-{{date 'YYYYMMDD'}},event=branch"
             "type=ref,event=tag"
             "type=ref,event=pr"
-      - name: Build Docker image
+      - name: Build container image
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: Dockerfile.${{ matrix.dockerfile }}
+          file: Containerfile.${{ matrix.containerfile }}
           load: true
           push: false
           tags: ${{ steps.meta.outputs.tags }}
@@ -113,7 +113,7 @@ jobs:
           ref: main
           path: src/debos
 
-      - name: Run fakemachine unit tests in Docker image
+      - name: Run fakemachine unit tests in container image
         run: |
           docker run \
             --rm \
@@ -129,7 +129,7 @@ jobs:
             ${{ steps.tag.outputs.container_image_tag }} \
             go test -v ./...
 
-      - name: Run debos unit tests in Docker image
+      - name: Run debos unit tests in container image
         run: |
           docker run \
             --rm \
@@ -145,11 +145,11 @@ jobs:
             ${{ steps.tag.outputs.container_image_tag }} \
             go test -v ./...
 
-      - name: Push Docker image
+      - name: Push container image
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: Dockerfile.${{ matrix.dockerfile }}
+          file: Containerfile.${{ matrix.containerfile }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
