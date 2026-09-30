@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2017-2026 Collabora Ltd.
 # SPDX-License-Identifier: Apache-2.0
 
-ARG BASE_IMAGE=debian:trixie-slim
+ARG BASE_IMAGE=debian:trixie
 FROM ${BASE_IMAGE}
 
 ARG DISTRO=debian
