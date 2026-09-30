@@ -43,19 +43,19 @@ jobs:
           - image-name: debian-trixie
             dockerfile: debian
             distro: debian
-            base-image: debian:trixie-slim
+            base-image: debian:trixie
           - image-name: debian-forky
             dockerfile: debian
             distro: debian
-            base-image: debian:forky-slim
+            base-image: debian:forky
           - image-name: ubuntu-stonking
             dockerfile: debian
             distro: ubuntu
             base-image: ubuntu:stonking
-          - image-name: fedora-latest
+          - image-name: fedora-44
             distro: fedora
             dockerfile: fedora
-            base-image: fedora:latest
+            base-image: fedora:44
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7

@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2017-2026 Collabora Ltd.
 # SPDX-License-Identifier: Apache-2.0
 
-FROM fedora:latest
+FROM fedora:44
 
 RUN dnf -y update && \
     dnf -y install --setopt=install_weak_deps=False \
