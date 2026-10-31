@@ -1,0 +1,115 @@
+# SPDX-FileCopyrightText: 2026 Qualcomm Technologies, Inc. and/or its subsidiaries
+# SPDX-License-Identifier: Apache-2.0
+
+name: Check for new distribution releases
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '42 12 * * 1'
+
+jobs:
+  check-releases:
+    runs-on: ubuntu-latest
+    name: Check for new distribution releases
+    if: github.repository == 'go-debos/test-containers'
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: List base images built by CI
+        id: matrix
+        run: |
+          base_images="$(yq -o=json -I=0 '[.jobs["build-containers"].strategy.matrix.include[]["base-image"]]' .github/workflows/ci.yaml)"
+          echo "base_images=$base_images" >> "$GITHUB_OUTPUT"
+
+      - name: Compare base images against current releases
+        uses: actions/github-script@v9
+        env:
+          BASE_IMAGES: ${{ steps.matrix.outputs.base_images }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const baseImages = JSON.parse(process.env.BASE_IMAGES);
+
+            async function get(url) {
+              const res = await fetch(url);
+              if (!res.ok)
+                throw new Error(`${url}: ${res.status} ${res.statusText}`);
+              return res;
+            }
+
+            async function debianCodename(suite) {
+              const release = await (await get(`https://deb.debian.org/debian/dists/${suite}/Release`)).text();
+              return release.match(/^Codename: (\S+)$/m)[1];
+            }
+
+            /* meta-release only lists a release once upgrades to it open, weeks after it is out */
+            const { entries: ubuntuSeries } = await (await get('https://api.launchpad.net/devel/ubuntu/series')).json();
+            const ubuntuLatest = ubuntuSeries.find(s => s.status === 'Current Stable Release').name;
+
+            /* The newest release branched from rawhide, whether or not it is out yet */
+            const { releases } = await (await get('https://bodhi.fedoraproject.org/releases/?exclude_archived=1&rows_per_page=100')).json();
+            const fedoraLatest = Math.max(...releases
+              .filter(r => /^F[0-9]+$/.test(r.name) && r.branch !== 'rawhide')
+              .map(r => Number(r.version)));
+
+            const expected = [
+              { image: `debian:${await debianCodename('stable')}`, release: 'Debian stable' },
+              { image: `debian:${await debianCodename('testing')}`, release: 'Debian testing' },
+              { image: `ubuntu:${ubuntuLatest}`, release: 'latest Ubuntu release' },
+              { image: `fedora:${fedoraLatest}`, release: 'latest branched Fedora release' },
+            ];
+            const tracked = baseImages.filter(image => /^(debian|ubuntu|fedora):/.test(image));
+
+            const missing = expected.filter(e => !baseImages.includes(e.image));
+            const stale = tracked.filter(image => !expected.some(e => e.image === image));
+
+            const title = 'Container images out of date';
+            const search = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${owner}/${repo} is:issue is:open in:title "${title}"`
+            });
+            const issue = search.data.items[0];
+
+            if (missing.length === 0 && stale.length === 0) {
+              core.info('Base images match the current releases');
+              if (issue) {
+                await github.rest.issues.createComment({
+                  owner, repo, issue_number: issue.number,
+                  body: 'The base images now match the current releases.',
+                });
+                await github.rest.issues.update({
+                  owner, repo, issue_number: issue.number, state: 'closed',
+                });
+              }
+              return;
+            }
+
+            const body = [
+              `### ${title}`,
+              `The build matrix in \`.github/workflows/ci.yaml\` does not match the current distribution releases.`,
+              ``,
+              ...(missing.length ? [`Not built:`, ...missing.map(e => `- \`${e.image}\` (${e.release})`), ``] : []),
+              ...(stale.length ? [`No longer current:`, ...stale.map(image => `- \`${image}\``), ``] : []),
+              `Update the matrix and the image list in the README. This issue is closed automatically once they match.`,
+            ].join("\n");
+            core.info(body);
+
+            /* Edit the existing issue rather than commenting every week */
+            if (!issue) {
+              await github.rest.issues.create({ owner, repo, title, body });
+            } else if (issue.body !== body) {
+              await github.rest.issues.update({ owner, repo, issue_number: issue.number, body });
+            }
+
+  # Keep workflow alive
+  # See https://docs.github.com/en/actions/learn-github-actions/usage-limits-billing-and-administration#disabling-and-enabling-workflows
+  workflow-keepalive:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: liskin/gh-workflow-keepalive@v1.2.1
