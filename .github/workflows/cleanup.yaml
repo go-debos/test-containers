@@ -87,6 +87,43 @@ jobs:
               }
             }
 
+      - name: Delete images no longer built
+        uses: actions/github-script@v9
+        env:
+          IMAGES: ${{ steps.images.outputs.images }}
+          DRY_RUN: ${{ inputs.dry-run || false }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const images = JSON.parse(process.env.IMAGES);
+            const dryRun = process.env.DRY_RUN === 'true';
+
+            /* Time given to downstream CI to move off a dropped image */
+            const gracePeriod = 90 * 24 * 60 * 60 * 1000;
+
+            const packages = await github.paginate(
+              github.rest.packages.listPackagesForOrganization,
+              { org: owner, package_type: 'container', per_page: 100 }
+            );
+
+            for (const pkg of packages) {
+              if (!pkg.name.startsWith(`${repo}/`))
+                continue;
+              if (images.includes(pkg.name.slice(repo.length + 1)))
+                continue;
+              if (Date.now() - new Date(pkg.updated_at) < gracePeriod) {
+                core.info(`Keeping ${pkg.name} until its grace period ends`);
+                continue;
+              }
+
+              core.info(`${dryRun ? 'Would delete' : 'Deleting'} ${pkg.name}: no longer built`);
+              if (!dryRun) {
+                await github.rest.packages.deletePackageForOrg({
+                  org: owner, package_type: 'container', package_name: pkg.name,
+                });
+              }
+            }
+
   # Keep workflow alive
   # See https://docs.github.com/en/actions/learn-github-actions/usage-limits-billing-and-administration#disabling-and-enabling-workflows
   workflow-keepalive:
