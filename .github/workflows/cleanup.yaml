@@ -1,0 +1,98 @@
+# SPDX-FileCopyrightText: 2026 Qualcomm Technologies, Inc. and/or its subsidiaries
+# SPDX-License-Identifier: Apache-2.0
+
+name: Clean up container registry
+on:
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Only log what would be deleted
+        type: boolean
+        default: true
+  schedule:
+    # After the weekly image rebuild
+    - cron: '42 6 * * 1'
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    name: Clean up container registry
+    if: github.repository == 'go-debos/test-containers'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: List images built by CI
+        id: images
+        run: |
+          images="$(yq -o=json -I=0 '[.jobs.build-containers.strategy.matrix.include[].image-name]' .github/workflows/ci.yaml)"
+          echo "images=$images" >> "$GITHUB_OUTPUT"
+
+      - name: Delete stale image versions
+        uses: actions/github-script@v9
+        env:
+          IMAGES: ${{ steps.images.outputs.images }}
+          # Scheduled runs have no inputs, so only a manual run can be dry
+          DRY_RUN: ${{ inputs.dry-run || false }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const images = JSON.parse(process.env.IMAGES);
+            const dryRun = process.env.DRY_RUN === 'true';
+
+            /* Weekly builds of main to keep, besides the current one */
+            const keepMainBuilds = 8;
+            /* Age after which images built from PRs and other branches go */
+            const maxBranchAge = 30 * 24 * 60 * 60 * 1000;
+            /* Tags added to each build of main by docker/metadata-action */
+            const mainBuildTag = /^main-([0-9a-f]{7,}|[0-9]{8})$/;
+
+            for (const image of images) {
+              const pkg = `${repo}/${image}`;
+              const versions = await github.paginate(
+                github.rest.packages.getAllPackageVersionsForPackageOwnedByOrg,
+                { org: owner, package_type: 'container', package_name: pkg, per_page: 100 }
+              );
+              versions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+              let mainBuilds = 0;
+              for (const version of versions) {
+                const tags = version.metadata.container.tags;
+                let reason;
+
+                if (tags.includes('main')) {
+                  continue;
+                } else if (tags.length === 0) {
+                  reason = 'untagged';
+                } else if (tags.some(tag => mainBuildTag.test(tag))) {
+                  if (++mainBuilds <= keepMainBuilds)
+                    continue;
+                  reason = `more than ${keepMainBuilds} older builds of main`;
+                } else if (Date.now() - new Date(version.created_at) > maxBranchAge) {
+                  reason = 'old PR or branch build';
+                } else {
+                  continue;
+                }
+
+                core.info(`${dryRun ? 'Would delete' : 'Deleting'} ${pkg}@${version.name} [${tags.join(', ')}]: ${reason}`);
+                if (!dryRun) {
+                  await github.rest.packages.deletePackageVersionForOrg({
+                    org: owner, package_type: 'container', package_name: pkg,
+                    package_version_id: version.id,
+                  });
+                }
+              }
+            }
+
+  # Keep workflow alive
+  # See https://docs.github.com/en/actions/learn-github-actions/usage-limits-billing-and-administration#disabling-and-enabling-workflows
+  workflow-keepalive:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: liskin/gh-workflow-keepalive@v1.2.1
