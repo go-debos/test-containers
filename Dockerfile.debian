@@ -28,6 +28,7 @@ RUN if [ "${DISTRO}" = "debian" ]; then \
 # Bits needed to run fakemachine
 RUN apt-get update  && \
     apt-get install --no-install-recommends -y qemu-system-x86 \
+                                               virtiofsd \
                                                qemu-user-binfmt \
                                                busybox \
                                                systemd \
