@@ -5,6 +5,7 @@ FROM archlinux:base-devel
 
 # Bits needed to run fakemachine
 RUN pacman -Syu --noconfirm qemu-base \
+                            virtiofsd \
                             busybox \
                             linux \
                             --assume-installed initramfs \
